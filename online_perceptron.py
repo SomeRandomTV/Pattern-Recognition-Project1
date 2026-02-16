@@ -43,7 +43,7 @@ class OnlinePerceptron:
         
         return truth_label - predicted_label
     
-    def fit(self):
+    def fit(self, verbose: bool = False):
         
         rho = self.learning_rate
         features = (self.inputs)
@@ -53,7 +53,6 @@ class OnlinePerceptron:
         
         for epoch in range(self.epochs):
             
-            print(f"=============== Epoch: {epoch} ===============")
             misclassifications = 0
             
             for i in range(self.iterations):
@@ -61,7 +60,7 @@ class OnlinePerceptron:
                 x_i = features[i]
                 t_i = truth_labels[i]
                 
-                weigthed_sum = self._calculate_weighted_sum(weights=weights, inputs=x_i, bias=bias)
+                weigthed_sum = self._calculate_weighted_sum(weights=self.weights, inputs=x_i, bias=bias)
                 
                 activation = self._activation_function(weighted_sum=weigthed_sum)
                 
@@ -75,20 +74,38 @@ class OnlinePerceptron:
             self.weights = weights
             self.bias = bias
             
-            print(f"======= Weights + Bias after Epoch {epoch} ===========")
-            print(f" -- Weights: {self.weights}")
-            print(f" -- Bias: {self.bias}")
-            print(f" -- Misclassifications: {misclassifications}")
-            
-            self.plot_decision_boundary(title=f"Epoch {epoch}")
+            if verbose:
+                print(f"Epoch {epoch}: Misclassifications = {misclassifications}")
             
             if misclassifications == 0:
-                print(f"Convergence achieved at epoch {epoch}")
-                print(f"Misclassifications: {misclassifications}")
+                print(f"Converged after {epoch + 1} epochs")
                 break
+        else:
+            print(f"Did not converge after {self.epochs} epochs (final misclassifications: {misclassifications})")
+    
+    def predict(self, new_input: np.ndarray):
+        
+        weighted_sm = self._calculate_weighted_sum(weights=self.weights, inputs=new_input, bias=self.bias)
+        return self._activation_function(weighted_sum=weighted_sm)
+    
+    def accuracy(self):
+        
+        correct = 0
+        for i in range(self.num_samples):
+            prediction = self.predict(self.inputs[i])
+            if prediction == self.labels[i]:
+                correct += 1
+        
+        acc = correct / self.num_samples
+        print(f"Accuracy: {correct}/{self.num_samples} = {acc:.4f}")
+        return acc
     
     def plot_decision_boundary(self, xlabel: str = "Feature 1", ylabel: str = "Feature 2",
                                title: str = "Online Perceptron Decision Boundary"):
+        
+        if self.num_features != 2:
+            print(f"Warning: Cannot plot decision boundary with {self.num_features} features. Skipping plot.")
+            return
         
         # Always use first two columns of the input array
         feature_x = 0

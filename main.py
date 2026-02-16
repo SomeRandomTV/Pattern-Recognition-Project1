@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 from pathlib import Path
 
 from online_perceptron import OnlinePerceptron
+from batch_perceptron import BatchPerceptron
 
 
 # Features:
@@ -182,29 +183,91 @@ def main(args):
     petal_features = ["meas_3", "meas_4"]
 
     # Task 1: Setosa vs rest, all features
-    print("========== Task 1: Setosa vs Rest (All Features) ==========")
+    print("\n========== Task 1: Setosa vs Rest (All Features) ==========")
     p1 = OnlinePerceptron(data=iris_df, pos_class="setosa", features=all_features)
     p1.fit()
-    # Can't plot boundary meaningfully with 4 features
+    p1.accuracy()
 
     # Task 2: Setosa vs rest, features 3 & 4
-    print("========== Task 2: Setosa vs Rest (Petal Features) ==========")
+    print("\n========== Task 2: Setosa vs Rest (Petal Features) ==========")
     p2 = OnlinePerceptron(data=iris_df, pos_class="setosa", features=petal_features)
     p2.fit()
+    p2.accuracy()
     p2.plot_decision_boundary(xlabel="Petal Length", ylabel="Petal Width",
-                              title="Setosa vs Rest (Petal Features)")
+                              title="Online: Setosa vs Rest (Petal Features)")
 
     # Task 3: Virginica vs rest, all features
-    print("========== Task 3: Virginica vs Rest (All Features) ==========")
+    print("\n========== Task 3: Virginica vs Rest (All Features) ==========")
     p3 = OnlinePerceptron(data=iris_df, pos_class="virginica", features=all_features)
     p3.fit()
+    p3.accuracy()
 
     # Task 4: Virginica vs rest, features 3 & 4
-    print("========== Task 4: Virginica vs Rest (Petal Features) ==========")
+    print("\n========== Task 4: Virginica vs Rest (Petal Features) ==========")
     p4 = OnlinePerceptron(data=iris_df, pos_class="virginica", features=petal_features)
     p4.fit()
+    p4.accuracy()
     p4.plot_decision_boundary(xlabel="Petal Length", ylabel="Petal Width",
-                              title="Virginica vs Rest (Petal Features)")
+                              title="Online: Virginica vs Rest (Petal Features)")
+
+    # Task 5: Versicolor vs rest, all features
+    print("\n========== Task 5: Versicolor vs Rest (All Features) ==========")
+    p5 = OnlinePerceptron(data=iris_df, pos_class="versicolor", features=all_features)
+    p5.fit()
+    p5.accuracy()
+
+    # Task 6: Versicolor vs rest, features 3 & 4
+    print("\n========== Task 6: Versicolor vs Rest (Petal Features) ==========")
+    p6 = OnlinePerceptron(data=iris_df, pos_class="versicolor", features=petal_features)
+    p6.fit()
+    p6.accuracy()
+    p6.plot_decision_boundary(xlabel="Petal Length", ylabel="Petal Width",
+                              title="Online: Versicolor vs Rest (Petal Features)")
+
+    print("\n===================================================================")
+    print("------------------------ Batch Perceptron -------------------------")
+
+    # Task 7: Setosa vs rest, all features
+    print("\n========== Task 7: Setosa vs Rest (All Features) ==========")
+    b1 = BatchPerceptron(data=iris_df, pos_class="setosa", learning_rate=0.1, features=all_features)
+    b1.fit()
+    b1.accuracy()
+
+    # Task 8: Setosa vs rest, features 3 & 4
+    print("\n========== Task 8: Setosa vs Rest (Petal Features) ==========")
+    b2 = BatchPerceptron(data=iris_df, pos_class="setosa", learning_rate=0.1, features=petal_features)
+    b2.fit()
+    b2.accuracy()
+    b2.plot_decision_boundary(xlabel="Petal Length", ylabel="Petal Width",
+                              title="Batch: Setosa vs Rest (Petal Features)")
+
+    # Task 9: Virginica vs rest, all features
+    print("\n========== Task 9: Virginica vs Rest (All Features) ==========")
+    b3 = BatchPerceptron(data=iris_df, pos_class="virginica", learning_rate=0.1, features=all_features)
+    b3.fit()
+    b3.accuracy()
+
+    # Task 10: Virginica vs rest, features 3 & 4
+    print("\n========== Task 10: Virginica vs Rest (Petal Features) ==========")
+    b4 = BatchPerceptron(data=iris_df, pos_class="virginica", learning_rate=0.1, features=petal_features)
+    b4.fit()
+    b4.accuracy()
+    b4.plot_decision_boundary(xlabel="Petal Length", ylabel="Petal Width",
+                              title="Batch: Virginica vs Rest (Petal Features)")
+
+    # Task 11: Versicolor vs rest, all features
+    print("\n========== Task 11: Versicolor vs Rest (All Features) ==========")
+    b5 = BatchPerceptron(data=iris_df, pos_class="versicolor", learning_rate=0.1, features=all_features)
+    b5.fit()
+    b5.accuracy()
+
+    # Task 12: Versicolor vs rest, features 3 & 4
+    print("\n========== Task 12: Versicolor vs Rest (Petal Features) ==========")
+    b6 = BatchPerceptron(data=iris_df, pos_class="versicolor", learning_rate=0.1, features=petal_features)
+    b6.fit()
+    b6.accuracy()
+    b6.plot_decision_boundary(xlabel="Petal Length", ylabel="Petal Width",
+                              title="Batch: Versicolor vs Rest (Petal Features)")
     
     
 
