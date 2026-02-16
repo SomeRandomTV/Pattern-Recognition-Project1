@@ -5,6 +5,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from pathlib import Path
 
+from online_perceptron import OnlinePerceptron
+
 
 # Features:
 # meas_1 => Sepal Length
@@ -36,8 +38,7 @@ class IrisClassifer:
         
         print("========= Basic Stuff ==========")
         print(f"DF Shape: {self.data.shape}\n")
-        print(f"DF D-Types:\n {self.data.dtypes}\n")
-        print(f"DF Description: \n {self.data.describe()}\n")
+        print(f"DF D-Types:\n{self.data.dtypes}\n")
         
         print("\n")
         print('-'*60)
@@ -50,46 +51,51 @@ class IrisClassifer:
         print("       ---------- Tail ----------")
         print(self.data.tail())
         
-    @staticmethod   
-    def _compute_sepal_length_stats(sepal_length_col: pd.Series):
+        print("========== Unique Values ==========")
+        print(self.data.nunique())
         
-        s_l_min = np.min(sepal_length_col)
-        s_l_max = np.max(sepal_length_col)
-        s_l_mean = np.mean(sepal_length_col)
-        s_l_varience = np.var(sepal_length_col)
+
+    @staticmethod
+    def _compute_column_stats(feature_column: pd.Series):
         
-        return s_l_min, s_l_max, s_l_mean, s_l_varience
+        _min = np.min(feature_column)
+        _max = np.max(feature_column)
+        _mean = np.mean(feature_column)
+        _varience = np.var(feature_column)
+        
+        return _min, _max, _mean, _varience
     
-    @staticmethod   
-    def _compute_sepal_width_stats(sepal_width_col: pd.Series):
+    def _compute_with_class_var(self, feature_col: str):
         
-        s_w_min = np.min(sepal_width_col)
-        s_w_max = np.max(sepal_width_col)
-        s_w_mean = np.mean(sepal_width_col)
-        s_w_varience = np.var(sepal_width_col)
+        classes = self.data["species"].unique()
+        total_n = len(self.data)
+        s_w = 0.0
         
-        return s_w_min, s_w_max, s_w_mean, s_w_varience
+        for cls in classes:
+            class_data = self.data[self.data["species"] == cls][feature_col]
+            p_j = len(class_data) / total_n
+            class_var = np.var(class_data)
+            s_w += class_var * p_j
+            
+        return s_w
+       
     
-    @staticmethod   
-    def _compute_pedal_length_stats(pedal_length_col: pd.Series):
+    def _compute_between_class_var(self, feature_col: str):
         
-        p_l_min = np.min(pedal_length_col)
-        p_l_max = np.max(pedal_length_col)
-        p_l_mean = np.mean(pedal_length_col)
-        p_l_varience = np.var(pedal_length_col)
+        classes = self.data["species"].unique()
+        total_mean = np.mean(self.data[feature_col])
+        total_n = len(self.data)
+        s_b = 0.0
         
-        return p_l_min, p_l_max, p_l_mean, p_l_varience
-    
-    @staticmethod   
-    def _compute_pedal_width_stats(pedal_width_col: pd.Series):
+        for cls in classes:
+            class_data = self.data[self.data["species"] == cls][feature_col]
+            mean_j = np.mean(class_data)
+            p_j = len(class_data) / total_n
+            s_b += p_j * (mean_j - total_mean) ** 2
+            
+        return s_b
         
-        p_w_min = np.min(pedal_width_col)
-        p_w_max = np.max(pedal_width_col)
-        p_w_mean = np.mean(pedal_width_col)
-        p_w_varience = np.var(pedal_width_col)
-        
-        return p_w_min, p_w_max, p_w_mean, p_w_varience
-        
+
         
     def compute_stats(self):
         
@@ -100,10 +106,60 @@ class IrisClassifer:
         pedal_length = iris_df["meas_3"]
         pedal_width = iris_df["meas_4"]
         
-        s_l_min, s_l_max, s_l_mean, s_l_varience = self._compute_sepal_length_stats(sepal_length_col=sepal_length)
-        s_w_min, s_w_max, s_w_mean, s_w_varience = self._compute_sepal_width_stats(sepal_width_col=sepal_width)
-        p_l_min, p_l_max, p_l_mean, p_l_varience = self._compute_pedal_length_stats(pedal_length_col=pedal_length)
-        p_w_min, p_w_max, p_w_mean, p_w_varience = self._compute_pedal_width_stats(pedal_width_col=pedal_width)
+        # compute individual stats
+        s_l_min, s_l_max, s_l_mean, s_l_varience = self._compute_column_stats(feature_column=sepal_length)
+        s_w_min, s_w_max, s_w_mean, s_w_varience = self._compute_column_stats(feature_column=sepal_width)
+        p_l_min, p_l_max, p_l_mean, p_l_varience = self._compute_column_stats(feature_column=pedal_length)
+        p_w_min, p_w_max, p_w_mean, p_w_varience = self._compute_column_stats(feature_column=pedal_width)
+        
+        # compute within-class variance per feature
+        s_l_within_var = self._compute_with_class_var(feature_col="meas_1")
+        s_w_within_var = self._compute_with_class_var(feature_col="meas_2")
+        p_l_within_var = self._compute_with_class_var(feature_col="meas_3")
+        p_w_within_var = self._compute_with_class_var(feature_col="meas_4")
+        
+        # compute between-class variance per feature
+        s_l_between_var = self._compute_between_class_var(feature_col="meas_1")
+        s_w_between_var = self._compute_between_class_var(feature_col="meas_2")
+        p_l_between_var = self._compute_between_class_var(feature_col="meas_3")
+        p_w_between_var = self._compute_between_class_var(feature_col="meas_4")
+        
+        print("="*60)
+        print("------------- Sepal Length Stats -------------")
+        print(f"Minimum: {s_l_min}")
+        print(f"Maximum: {s_l_max}")
+        print(f"Mean: {s_l_mean}")
+        print(f"Varience: {s_l_varience}")
+        print(f"Within-Class Varience: {s_l_within_var}")
+        print(f"Between-Class Varience: {s_l_between_var}")
+        print("\n")
+        
+        print("------------- Sepal Width  Stats -------------")
+        print(f"Minimum: {s_w_min}")
+        print(f"Maximum: {s_w_max}")
+        print(f"Mean: {s_w_mean}")
+        print(f"Varience: {s_w_varience}")
+        print(f"Within-Class Varience: {s_w_within_var}")
+        print(f"Between-Class Varience: {s_w_between_var}")
+        print("\n")
+
+        print("------------- Pedal Length Stats -------------")
+        print(f"Minimum: {p_l_min}")
+        print(f"Maximum: {p_l_max}")
+        print(f"Mean: {p_l_mean}")
+        print(f"Varience: {p_l_varience}")
+        print(f"Within-Class Varience: {p_l_within_var}")
+        print(f"Between-Class Varience: {p_l_between_var}")
+        print("\n")
+        
+        print("------------- Pedal Width Stats  -------------")
+        print(f"Minimum: {p_w_min}")
+        print(f"Maximum: {p_w_max}")
+        print(f"Mean: {p_w_mean}")
+        print(f"Varience: {p_w_varience}")
+        print(f"Within-Class Varience: {p_w_within_var}")
+        print(f"Between-Class Varience: {p_w_between_var}")
+        print("\n")
 
 
 def main(args):
@@ -117,6 +173,39 @@ def main(args):
     
     iris_classifier.print_data()
     iris_classifier.compute_stats()
+    
+    
+    print("===================================================================")
+    print("------------------------ Online Perceptron ------------------------")
+    
+    all_features = ["meas_1", "meas_2", "meas_3", "meas_4"]
+    petal_features = ["meas_3", "meas_4"]
+
+    # Task 1: Setosa vs rest, all features
+    print("========== Task 1: Setosa vs Rest (All Features) ==========")
+    p1 = OnlinePerceptron(data=iris_df, pos_class="setosa", features=all_features)
+    p1.fit()
+    # Can't plot boundary meaningfully with 4 features
+
+    # Task 2: Setosa vs rest, features 3 & 4
+    print("========== Task 2: Setosa vs Rest (Petal Features) ==========")
+    p2 = OnlinePerceptron(data=iris_df, pos_class="setosa", features=petal_features)
+    p2.fit()
+    p2.plot_decision_boundary(xlabel="Petal Length", ylabel="Petal Width",
+                              title="Setosa vs Rest (Petal Features)")
+
+    # Task 3: Virginica vs rest, all features
+    print("========== Task 3: Virginica vs Rest (All Features) ==========")
+    p3 = OnlinePerceptron(data=iris_df, pos_class="virginica", features=all_features)
+    p3.fit()
+
+    # Task 4: Virginica vs rest, features 3 & 4
+    print("========== Task 4: Virginica vs Rest (Petal Features) ==========")
+    p4 = OnlinePerceptron(data=iris_df, pos_class="virginica", features=petal_features)
+    p4.fit()
+    p4.plot_decision_boundary(xlabel="Petal Length", ylabel="Petal Width",
+                              title="Virginica vs Rest (Petal Features)")
+    
     
 
 if __name__ == "__main__":
